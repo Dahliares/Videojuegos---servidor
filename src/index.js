@@ -49,7 +49,7 @@ function handleDisconnect() {
 
 //configuraciones
 
-app.set('port', process.env.PORT || 3333)
+app.set('port', process.env.PORT || 5555)
 
 app.listen(app.get('port'), "0.0.0.0",() => {
     console.log('Server on port ' + app.get('port'));
@@ -61,7 +61,7 @@ app.listen(app.get('port'), "0.0.0.0",() => {
 
 //obtener todos los dibujos
 app.get('/', (req, res) => {
-    db.query('SELECT * FROM dibudahlia ORDER BY year DESC',
+    db.query('SELECT * FROM videojuegos',
         (err, result) => {
             if (err) { console.log(err) }
             else { res.send(result); }
@@ -70,11 +70,11 @@ app.get('/', (req, res) => {
 });
 
 //enviar un dibujo en contcreto por id
-app.get('/dibujo/:id', (req, res) => {
+app.get('/videojuego/:id', (req, res) => {
 
     const params = req.params;
 
-    db.query('SELECT * FROM dibudahlia WHERE id = ' + params.id,
+    db.query('SELECT * FROM videojuegos WHERE id = ' + params.id,
         (err, result) => {
             if (err) { console.log(err) }
             else { res.send(result); }
@@ -86,11 +86,11 @@ app.get('/dibujo/:id', (req, res) => {
 
 
 //enviar todos los dibujos de un año concreto
-app.get('/year/:year', (req, res) => {
+app.get('/consola/:consola', (req, res) => {
 
     const params = req.params;
 
-    db.query('SELECT * FROM dibudahlia WHERE year = ? ', params.year,
+    db.query('SELECT * FROM videojuegos WHERE consola = ? ', params.consola,
         (err, result) => {
             if (err) { console.log(err) }
             else { res.send(result); console.log(result) }
@@ -101,38 +101,7 @@ app.get('/year/:year', (req, res) => {
 });
 
 
-// --------------- COMENTARIOS ------------------------------
 
-app.get('/comentarios/:id', (req, res) => {
-
-    const params = req.params;
-
-    db.query('SELECT * FROM comentarios WHERE dibujo_id = ? ', params.id,
-        (err, result) => {
-            if (err) { console.log(err) }
-            else { 
-                res.send(result); 
-                console.log(result) }
-        })
-
-
-});
-
-
-//guardar nuevo comentario
-app.post("/comentario", async (req, res) => {
-
-    const id = req.body.id;
-    const user = req.body.user;
-    const comentario = req.body.comentario;
-    
-    
-    db.query('INSERT INTO comentarios (user, comentario, dibujo_id) VALUES (?,?,?)', [user, comentario, id], (err, result) => {
-        if (err) { console.log(err); }
-        else { res.send({"mensaje":"Comentario guardado!"}) }
-    });
-
-});
 
 
 // ---------------- REGISTER + LOGIN ----------------------------------
