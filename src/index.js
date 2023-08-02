@@ -4,6 +4,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { encriptar, comparar } from './crypt.js';
 import mysql from 'mysql';
+import multer from 'multer';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -16,6 +17,8 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
+const upload = multer({ storage:multer.memoryStorage() });
+
 //DB CONEXIÓN
 
 let db;
@@ -24,34 +27,34 @@ const configuration = {
     user: process.env.USER,
     password: process.env.PASSWORD,
     database: process.env.DBNAME
-  }
+}
 function handleDisconnect() {
     db = mysql.createConnection(configuration);
-  
-    db.connect(function(err) {
-      if (err) {
-        console.log("Error de conexión con la bd:", err);
-        setTimeout(handleDisconnect, 2000);
-      }else{
-          console.log("Conectado correctamente a la bd");
-      }
+
+    db.connect(function (err) {
+        if (err) {
+            console.log("Error de conexión con la bd:", err);
+            setTimeout(handleDisconnect, 2000);
+        } else {
+            console.log("Conectado correctamente a la bd");
+        }
     });
-    db.on("error", function(err) {
-      console.log("db error", err);
-      if (err.code === "PROTOCOL_CONNECTION_LOST") {
-        handleDisconnect();
-      } else {
-        throw err;
-      }
+    db.on("error", function (err) {
+        console.log("db error", err);
+        if (err.code === "PROTOCOL_CONNECTION_LOST") {
+            handleDisconnect();
+        } else {
+            throw err;
+        }
     });
-  }
-  handleDisconnect();
+}
+handleDisconnect();
 
 //configuraciones
 
 app.set('port', process.env.PORT || 5555)
 
-app.listen(app.get('port'), "0.0.0.0",() => {
+app.listen(app.get('port'), "0.0.0.0", () => {
     console.log('Server on port ' + app.get('port'));
 })
 
@@ -148,60 +151,84 @@ app.post('/login', (req, res) => {
 });
 
 
+app.post('/add', upload.single('file'), (req, res) => {
+
+    let formato = req.file.mimetype.split('/')[1];
+
+    let img = "data:image/" + formato + ";base64," + req.file.buffer.toString('base64');
+    let name = req.body.nombre;
+    console.log(name);
+    console.log(req.file);
+    console.log(req.file.mimetype.split('/')[1]);
+    
+
+
+    db.query('INSERT INTO videojuegos (nombre, img) VALUES (?,?)', [name, img], (err, result) => {
+
+        if (err) { console.log(err) }
+        else {
+            res.send({"mensaje":"juego insertado"});
+        }
 
 
 
-/*app.put('/resetpass', (req, res) => {
-
-
-   const username = req.body.username;
-   const pass = req.body.pass;
-
-    let hashPassword = await encriptar(pass);
-
-    db.query('INSERT INTO users (username, password) VALUES (?,?)', [username, hashPassword], (err, result) => {
-        if (err) { console.log(err); }
-        else { res.send("User registrado con exito") }
     });
 
 
-});*/
-
-
-
-
-
-//cambiar la contraseña de un usuario
-app.post('/resetpass', (req, res) => {
-
-    const username = req.body.username;
-    const newpass = req.body.pass;
-
-
-    db.query('SELECT * FROM users WHERE username = ?', username,
-        async (err, result) => {
-            if (err) { console.log(err) }
-            else {
-
-                if (result.length < 1) {
-                    res.send("Ese usuario no existe")
-                } else {
-                    let hashedpass = await encriptar(newpass);
-
-                    db.query('UPDATE users SET password = ? WHERE username = ?', [hashedpass, username],
-                        async (err, result) => {
-                            if (err) { console.log(err) }
-                            else {
-                                res.send("Contraseña cambiada con éxito")
-                            }
-
-                        });
-                }
-            }
-        });
-
-
 });
+
+
+    /*app.put('/resetpass', (req, res) => {
+    
+    
+       const username = req.body.username;
+       const pass = req.body.pass;
+    
+        let hashPassword = await encriptar(pass);
+    
+        db.query('INSERT INTO users (username, password) VALUES (?,?)', [username, hashPassword], (err, result) => {
+            if (err) { console.log(err); }
+            else { res.send("User registrado con exito") }
+        });
+    
+    
+    });*/
+
+
+
+
+
+    //cambiar la contraseña de un usuario
+    app.post('/resetpass', (req, res) => {
+
+        const username = req.body.username;
+        const newpass = req.body.pass;
+
+
+        db.query('SELECT * FROM users WHERE username = ?', username,
+            async (err, result) => {
+                if (err) { console.log(err) }
+                else {
+
+                    if (result.length < 1) {
+                        res.send("Ese usuario no existe")
+                    } else {
+                        let hashedpass = await encriptar(newpass);
+
+                        db.query('UPDATE users SET password = ? WHERE username = ?', [hashedpass, username],
+                            async (err, result) => {
+                                if (err) { console.log(err) }
+                                else {
+                                    res.send("Contraseña cambiada con éxito")
+                                }
+
+                            });
+                    }
+                }
+            });
+
+
+    });
 
 
 
