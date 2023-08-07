@@ -14,8 +14,8 @@ const app = express();
 //middelwares
 app.use(logger('dev'));
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false, limit: '100mb' }));
+app.use(bodyParser.json());
 
 const upload = multer({ storage:multer.memoryStorage() });
 
@@ -59,10 +59,11 @@ app.listen(app.get('port'), "0.0.0.0", () => {
 })
 
 
-//rutas
-// --------------------- DIBUJOS --------------------------
 
-//obtener todos los dibujos
+//rutas
+// --------------------- JUEGOS --------------------------
+
+//obtener todos los juegos
 app.get('/', (req, res) => {
     db.query('SELECT * FROM videojuegos',
         (err, result) => {
@@ -72,7 +73,7 @@ app.get('/', (req, res) => {
 
 });
 
-//enviar un dibujo en contcreto por id
+//enviar un juego en contcreto por id
 app.get('/videojuego/:id', (req, res) => {
 
     const params = req.params;
@@ -153,19 +154,31 @@ app.post('/login', (req, res) => {
 
 app.post('/add', upload.single('file'), (req, res) => {
 
-    let formato = req.file.mimetype.split('/')[1];
+    let formatoImg = req.file.mimetype.split('/')[1];
 
-    let img = "data:image/" + formato + ";base64," + req.file.buffer.toString('base64');
-    let name = req.body.nombre;
-    console.log(name);
+    let img = "data:image/" + formatoImg + ";base64," + req.file.buffer.toString('base64');
+    let nombre = req.body.nombre;
+    let consola = req.body.consola;
+    let tipo = req.body.tipo;
+    let saga = req.body.saga;
+    let formato = req.body.formato;
+    let idioma = req.body.idioma;
+    let estado = req.body.estado;
+    let compania = req.body.compania;
+    let comentarios = req.body.comentarios;
+    
     console.log(req.file);
     console.log(req.file.mimetype.split('/')[1]);
     
 
 
-    db.query('INSERT INTO videojuegos (nombre, img) VALUES (?,?)', [name, img], (err, result) => {
+   db.query('INSERT INTO  videojuegos (nombre, consola, tipo, saga, formato, idioma, estado, compania, comentarios, img) VALUES (?,?,?,?,?,?,?,?,?,?)', 
+   [nombre, consola, tipo, saga, formato, idioma, estado, compania, comentarios, img], (err, result) => {
 
-        if (err) { console.log(err) }
+        if (err) { 
+            console.log(err) 
+            res.send({"mensaje":"error"});
+        }
         else {
             res.send({"mensaje":"juego insertado"});
         }
